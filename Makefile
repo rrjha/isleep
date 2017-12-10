@@ -7,6 +7,7 @@ ifeq ($(BUILDENV),Win)
 CC = "C:\gcc-linaro\bin\arm-linux-gnueabihf-gcc.exe"
 LD = "C:\gcc-linaro\bin\arm-linux-gnueabihf-gcc.exe"
 else
+DTC = dtc
 CC = gcc
 LD = gcc
 endif
@@ -16,6 +17,7 @@ REMOVE = rm -f
 
 INCLUDES = ..
 OBJDIR = src
+DTBODIR = overlays
 
 CFLAGS  += -O0 
 CFLAGS  += -g 
@@ -23,37 +25,47 @@ CFLAGS  += -I.
 CFLAGS  += -I$(INCLUDES)
 LDFLAGS +=
 
+SRC :=	src/accel.c \
+	src/temp.c \
+	src/bbbclient.c \
+	libs/src/core.c \
+	libs/src/spi.c
 
-SRC := src/accel.c \
-    src/temp.c
-    src/glue.c
+DTS :=	overlays/BB-SPI0-01-00A0.dts
 
 OBJ := $(SRC:.c=.o)
+DTBO := $(DTS:.dts=.dtbo)
 
 # for a better output
 MSG_EMPTYLINE = . 
-MSG_COMPILING = ---COMPILE--- 
+MSG_COMPILING = ---COMPILE---
+MSG_COMPILING_OVERLAY = ---COMPILE DT OVERLAY--- 
 MSG_LINKING = ---LINK--- 
 MSG_SUCCESS = ---SUCCESS--- 
 
-all: $(TARGET)
+all: $(TARGET) $(DTBO)
 .PHONY: all
 
 # Link
 $(TARGET): $(OBJ)
-    @echo $(MSG_EMPTYLINE)
-    @echo $(MSG_LINKING)
-    $(LD) -o $@ $^ $(LDFLAGS)
-    @echo $(MSG_EMPTYLINE)
-    @echo $(MSG_SUCCESS) $(PROJECT)
+	@echo $(MSG_EMPTYLINE)
+	@echo $(MSG_LINKING)
+	$(LD) -o $@ $^ $(LDFLAGS)
+	@echo $(MSG_EMPTYLINE)
 
 # Compile
-.cpp.o:
-    @echo $(MSG_EMPTYLINE)
-    @echo $(MSG_COMPILING) $<
-    $(CC) -c -o $@ $< $(CFLAGS)
+.c.o:
+	@echo $(MSG_EMPTYLINE)
+	@echo $(MSG_COMPILING) $<
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+%.dtbo: %.dts
+	@echo $(MSG_EMPTYLINE)
+	@echo $(MSG_COMPILING_OVERLAY) $<
+	$(DTC) -O dtb -o $@ -b 0 -@ $<
+	@echo $(MSG_SUCCESS) $(PROJECT)
 
 .PHONY: clean
 clean:
-    $(REMOVE) $(OBJDIR)/*.o $(TARGET)
+	$(REMOVE) $(OBJDIR)/*.o $(DTBODIR)/*.dtbo $(TARGET)
 

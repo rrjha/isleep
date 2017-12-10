@@ -1,3 +1,1 @@
-
-
-extern double temp();
+extern int read_temp();

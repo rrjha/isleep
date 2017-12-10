@@ -24,22 +24,22 @@ double temperature(char *string)
 double temp()
 {
   int fd = open(AIN_DEV, O_RDONLY);
-   double celsius=0;
-  //while (1)
- // {
-    char buffer[1024];
-    int ret = read(fd, buffer, sizeof(buffer));
-    if (ret != -1)
-    {
-      buffer[ret] = '\0';
-      celsius = temperature(buffer);
-      double fahrenheit = CtoF(celsius);
-      //printf("digital value: %s  celsius: %f  fahrenheit: %f\n", buffer, celsius, fahrenheit);
-      lseek(fd, 0, 0);
-    }
-    sleep(1);
- // }
-
+  double celsius=0;
+  char buffer[1024];
+  int ret = read(fd, buffer, sizeof(buffer));
+  if (ret != -1)
+  {
+    buffer[ret] = '\0';
+    celsius = temperature(buffer);
+    double fahrenheit = CtoF(celsius);
+    lseek(fd, 0, 0);
+  }
+  sleep(1);
   close(fd);
   return celsius;
+}
+
+int read_temp() {
+	int tmp = (temp() + 0.5); //round up to nearest integer
+	return tmp;
 }
